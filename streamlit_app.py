@@ -1,207 +1,300 @@
 import streamlit as st
-import pandas as pd
-import numpy as np
 
-# 1️⃣ 페이지 제목 - 가장 큰 제목으로 페이지의 주제를 나타냅니다
-st.title("🎈 Streamlit 요소 예시 가이드")
+# 페이지 설정
+st.set_page_config(page_title="가천대학교 체력시험 합격 판정 시스템", layout="wide")
 
-# 2️⃣ 마크다운 텍스트 - 마크다운 형식을 지원하며 텍스트 서식을 적용할 수 있습니다
-st.markdown("---")
-st.markdown("""
-### 📚 Streamlit 기본 요소들
+# 세션 상태 초기화
+if 'page' not in st.session_state:
+    st.session_state.page = "university_select"
+if 'selected_university' not in st.session_state:
+    st.session_state.selected_university = None
+if 'converted_score' not in st.session_state:
+    st.session_state.converted_score = None
+if 'practical_scores' not in st.session_state:
+    st.session_state.practical_scores = {
+        "배근력검사": None,
+        "10m왕복달리기": None,
+        "제자리멀리뛰기": None,
+        "메디신볼던지기": None
+    }
 
-이 페이지는 단일 Streamlit 페이지에 넣을 수 있는 다양한 요소들을 보여줍니다.
-""")
+# 가천대학교 기준 정보
+UNIVERSITY_STANDARDS = {
+    "가천대학교": {
+        "converted_max": 300,
+        "practical_max": 700,
+        "events": {
+            "배근력검사": {
+                "standard": 221,
+                "max_score": 175,
+                "unit": "kg",
+                "decreasing": True,
+                "per_grade": 4
+            },
+            "10m왕복달리기": {
+                "standard": 8.0,
+                "max_score": 175,
+                "unit": "초",
+                "decreasing": True,
+                "per_grade": 0.1
+            },
+            "제자리멀리뛰기": {
+                "standard": 300,
+                "max_score": 175,
+                "unit": "cm",
+                "decreasing": False,
+                "per_grade": 5
+            },
+            "메디신볼던지기": {
+                "standard": 12.5,
+                "max_score": 175,
+                "unit": "m",
+                "decreasing": False,
+                "per_grade": 0.2
+            }
+        }
+    }
+}
 
-# 3️⃣ 텍스트 출력 - 간단한 문자열을 출력합니다
-st.write("Let's start building! For help and inspiration, head over to [docs.streamlit.io](https://docs.streamlit.io/).")
+def calculate_practical_score(event_name, performance, university="가천대학교"):
+    """실기 성적에 따른 점수 계산"""
+    standards = UNIVERSITY_STANDARDS[university]["events"][event_name]
+    
+    standard = standards["standard"]
+    max_score = standards["max_score"]
+    is_decreasing = standards["decreasing"]
+    per_grade = standards["per_grade"]
+    
+    if is_decreasing:
+        difference = standard - performance
+    else:
+        difference = performance - standard
+    
+    if difference >= 0:
+        score = max_score
+    else:
+        grades_down = abs(difference) / per_grade
+        score = max_score - (grades_down * (max_score / 8.75))
+        score = max(0, score)
+    
+    return score
 
-# 4️⃣ 부제목 - 섹션을 구분하는데 사용됩니다
-st.subheader("📊 데이터 표시")
+def page_university_select():
+    """1단계: 대학교 선택"""
+    st.title("🏫 체력시험 합격 판정 시스템")
+    st.subheader("1단계: 대학교 선택")
+    
+    col1, col2 = st.columns([1, 2])
+    
+    with col1:
+        st.info("현재 가천대학교만 지원합니다.")
+    
+    with col2:
+        selected = st.selectbox(
+            "대학교를 선택하세요:",
+            list(UNIVERSITY_STANDARDS.keys()),
+            key="university_select"
+        )
+    
+    if st.button("다음 단계로 진행 →"):
+        st.session_state.selected_university = selected
+        st.session_state.page = "converted_score_input"
+        st.rerun()
 
-# 5️⃣ 칼럼 레이아웃 - 여러 요소를 나란히 배치할 수 있습니다
-col1, col2, col3 = st.columns(3)
+def page_converted_score_input():
+    """2단계: 환산점수 입력"""
+    st.title("🏫 체력시험 합격 판정 시스템")
+    st.subheader("2단계: 환산점수 입력")
+    
+    university = st.session_state.selected_university
+    max_converted = UNIVERSITY_STANDARDS[university]["converted_max"]
+    
+    st.write(f"**선택된 대학교:** {university}")
+    st.write(f"**환산점수 만점:** {max_converted}점")
+    
+    col1, col2 = st.columns([1, 1])
+    
+    with col1:
+        converted_score = st.number_input(
+            f"환산점수를 입력하세요 (0~{max_converted}점):",
+            min_value=0,
+            max_value=max_converted,
+            value=0,
+            step=1
+        )
+    
+    with col2:
+        st.metric("입력된 환산점수", f"{converted_score}점")
+    
+    col1, col2 = st.columns([1, 1])
+    
+    with col1:
+        if st.button("이전 단계로 ←"):
+            st.session_state.page = "university_select"
+            st.rerun()
+    
+    with col2:
+        if st.button("다음 단계로 진행 →"):
+            st.session_state.converted_score = converted_score
+            st.session_state.page = "practical_score_input"
+            st.rerun()
 
-with col1:
-    # 6️⃣ 메트릭 표시 - 숫자와 변화율을 표시합니다
-    st.metric("온도", "25 °C", "1.2 °C")
+def page_practical_score_input():
+    """3단계: 실기 점수 입력"""
+    st.title("🏫 체력시험 합격 판정 시스템")
+    st.subheader("3단계: 실기 종목별 성적 입력")
+    
+    university = st.session_state.selected_university
+    converted_score = st.session_state.converted_score
+    events = UNIVERSITY_STANDARDS[university]["events"]
+    
+    st.write(f"**선택된 대학교:** {university}")
+    st.write(f"**환산점수:** {converted_score}점")
+    st.divider()
+    
+    for event_name, standards in events.items():
+        st.write(f"### {event_name}")
+        
+        col1, col2, col3 = st.columns([1, 1, 1])
+        
+        with col1:
+            st.write(f"**기준:** {standards['standard']} {standards['unit']}")
+        
+        with col2:
+            st.write(f"**만점:** {standards['max_score']}점")
+        
+        with col3:
+            if standards['decreasing']:
+                st.write(f"**감점 기준:** {standards['per_grade']}{standards['unit']}당 1등급")
+            else:
+                st.write(f"**감점 기준:** {standards['per_grade']}{standards['unit']}당 1등급")
+        
+        performance = st.number_input(
+            f"{event_name} 성적 입력 ({standards['unit']}):",
+            min_value=0.0,
+            value=float(st.session_state.practical_scores[event_name]) if st.session_state.practical_scores[event_name] is not None else 0.0,
+            step=0.1,
+            key=f"input_{event_name}"
+        )
+        
+        st.session_state.practical_scores[event_name] = performance
+        st.divider()
+    
+    col1, col2 = st.columns([1, 1])
+    
+    with col1:
+        if st.button("이전 단계로 ←"):
+            st.session_state.page = "converted_score_input"
+            st.rerun()
+    
+    with col2:
+        if st.button("최종 결과 보기 →"):
+            st.session_state.page = "result"
+            st.rerun()
 
-with col2:
-    # 7️⃣ 메트릭 표시 (감소)
-    st.metric("습도", "65 %", "-3 %")
+def page_result():
+    """4단계: 최종 결과"""
+    st.title("🏫 체력시험 합격 판정 시스템")
+    st.subheader("4단계: 최종 결과")
+    
+    university = st.session_state.selected_university
+    converted_score = st.session_state.converted_score
+    practical_scores = st.session_state.practical_scores
+    events = UNIVERSITY_STANDARDS[university]["events"]
+    
+    st.write(f"**선택된 대학교:** {university}")
+    st.divider()
+    
+    st.write("### 📊 환산점수")
+    st.metric("환산점수", f"{converted_score}점 / {UNIVERSITY_STANDARDS[university]['converted_max']}점")
+    
+    st.divider()
+    
+    st.write("### 🏃 실기 성적 및 점수")
+    
+    total_practical_score = 0
+    practical_details = []
+    
+    for event_name, performance in practical_scores.items():
+        score = calculate_practical_score(event_name, performance, university)
+        total_practical_score += score
+        
+        standards = events[event_name]
+        practical_details.append({
+            "종목": event_name,
+            "성적": f"{performance}{standards['unit']}",
+            "획득점수": f"{score:.2f}점"
+        })
+    
+    for detail in practical_details:
+        col1, col2, col3 = st.columns([2, 1, 1])
+        with col1:
+            st.write(f"**{detail['종목']}**")
+        with col2:
+            st.write(detail['성적'])
+        with col3:
+            st.write(detail['획득점수'])
+        st.divider()
+    
+    st.metric("실기 총점", f"{total_practical_score:.2f}점 / {UNIVERSITY_STANDARDS[university]['practical_max']}점")
+    
+    st.divider()
+    
+    st.write("### 📋 최종 결과")
+    total_score = converted_score + total_practical_score
+    max_total_score = UNIVERSITY_STANDARDS[university]["converted_max"] + UNIVERSITY_STANDARDS[university]["practical_max"]
+    
+    col1, col2, col3 = st.columns([1, 1, 1])
+    
+    with col1:
+        st.metric("환산점수", f"{converted_score}점")
+    with col2:
+        st.metric("실기총점", f"{total_practical_score:.2f}점")
+    with col3:
+        st.metric("합계", f"{total_score:.2f}점")
+    
+    st.divider()
+    
+    st.write("### ✅ 합격 판정")
+    
+    passing_score = max_total_score * 0.6
+    
+    if total_score >= passing_score:
+        st.success(f"🎉 **합격** 입니다!", icon="✅")
+        st.write(f"획득점수: **{total_score:.2f}점** (합격선: {passing_score:.2f}점 이상)")
+    else:
+        st.error(f"😢 **불합격** 입니다.", icon="❌")
+        st.write(f"획득점수: **{total_score:.2f}점** (합격선: {passing_score:.2f}점 이상)")
+        st.write(f"필요한 추가점수: **{passing_score - total_score:.2f}점**")
+    
+    st.divider()
+    
+    col1, col2 = st.columns([1, 1])
+    
+    with col1:
+        if st.button("이전 단계로 ←"):
+            st.session_state.page = "practical_score_input"
+            st.rerun()
+    
+    with col2:
+        if st.button("처음부터 다시 시작 🔄"):
+            st.session_state.page = "university_select"
+            st.session_state.selected_university = None
+            st.session_state.converted_score = None
+            st.session_state.practical_scores = {
+                "배근력검사": None,
+                "10m왕복달리기": None,
+                "제자리멀리뛰기": None,
+                "메디신볼던지기": None
+            }
+            st.rerun()
 
-with col3:
-    # 8️⃣ 메트릭 표시 (변화 없음)
-    st.metric("기압", "1013 hPa", "0")
-
-st.divider()  # 9️⃣ 구분선 - 섹션을 시각적으로 분리합니다
-
-# 🔟 데이터프레임 표시 - 표 형태의 데이터를 보여줍니다
-st.subheader("📋 테이블")
-data = pd.DataFrame({
-    '이름': ['Alice', 'Bob', 'Charlie'],
-    '나이': [25, 30, 35],
-    '도시': ['서울', '부산', '대구']
-})
-st.dataframe(data)
-
-# 1️⃣1️⃣ 테이블 - 상호작용이 없는 일반 테이블입니다
-st.write("### 일반 테이블")
-st.table(data)
-
-st.divider()
-
-# 1️⃣2️⃣ 입력 위젯 섹션
-st.subheader("🎮 입력 위젯")
-
-# 1️⃣3️⃣ 텍스트 입력 - 사용자로부터 텍스트를 입력받습니다
-name = st.text_input("이름을 입력하세요:", value="홍길동")
-st.write(f"안녕하세요, {name}!")
-
-# 1️⃣4️⃣ 텍스트 영역 - 여러 줄의 텍스트를 입력받습니다
-message = st.text_area("메시지를 입력하세요:", height=100)
-if message:
-    st.write("입력된 메시지:", message)
-
-# 1️⃣5️⃣ 숫자 입력 - 숫자를 입력받습니다
-age = st.number_input("나이를 입력하세요:", min_value=0, max_value=120, step=1)
-st.write(f"입력된 나이: {age}")
-
-# 1️⃣6️⃣ 슬라이더 - 범위 내에서 값을 선택합니다
-slider_value = st.slider("값을 선택하세요", 0, 100, 50)
-st.write(f"슬라이더 값: {slider_value}")
-
-# 1️⃣7️⃣ 선택 박스 - 드롭다운 메뉴에서 하나를 선택합니다
-selected_city = st.selectbox("도시를 선택하세요:", ["서울", "부산", "대구", "인천"])
-st.write(f"선택된 도시: {selected_city}")
-
-# 1️⃣8️⃣ 멀티셀렉트 - 여러 개를 선택할 수 있습니다
-selected_items = st.multiselect("선호하는 과일을 선택하세요:", 
-                                ["사과", "바나나", "포도", "딸기", "귤"])
-st.write("선택된 과일:", selected_items)
-
-# 1️⃣9️⃣ 라디오 버튼 - 여러 선택지 중 하나만 선택합니다
-gender = st.radio("성별을 선택하세요:", ["남성", "여성", "기타"])
-st.write(f"선택된 성별: {gender}")
-
-# 2️⃣0️⃣ 체크박스 - 여러 개를 동시에 선택할 수 있습니다
-if st.checkbox("조건에 동의합니다"):
-    st.write("조건에 동의해주셨습니다!")
-
-# 2️⃣1️⃣ 날짜 입력 - 날짜를 선택받습니다
-selected_date = st.date_input("날짜를 선택하세요:")
-st.write(f"선택된 날짜: {selected_date}")
-
-# 2️⃣2️⃣ 시간 입력 - 시간을 선택받습니다
-selected_time = st.time_input("시간을 선택하세요:")
-st.write(f"선택된 시간: {selected_time}")
-
-# 2️⃣3️⃣ 파일 업로더 - 사용자가 파일을 업로드할 수 있습니다
-uploaded_file = st.file_uploader("파일을 업로드하세요:", type=["csv", "txt", "xlsx"])
-if uploaded_file is not None:
-    st.write(f"업로드된 파일: {uploaded_file.name}")
-
-# 2️⃣4️⃣ 버튼 - 클릭 가능한 버튼입니다
-if st.button("클릭해보세요!"):
-    st.balloons()  # 🎈 풍선 애니메이션
-    st.write("버튼이 클릭되었습니다!")
-
-st.divider()
-
-# 2️⃣5️⃣ 차트 및 시각화
-st.subheader("📈 차트 및 시각화")
-
-# 2️⃣6️⃣ 라인 차트 - 시계열 데이터를 라인으로 표시합니다
-chart_data = pd.DataFrame({
-    '월': ['1월', '2월', '3월', '4월', '5월'],
-    '매출': [10, 15, 12, 18, 20],
-    '비용': [5, 7, 6, 8, 9]
-})
-st.line_chart(chart_data.set_index('월'))
-
-# 2️⃣7️⃣ 바 차트 - 카테고리별 데이터를 막대로 표시합니다
-bar_data = pd.DataFrame({
-    '제품': ['A', 'B', 'C', 'D'],
-    '판매량': [50, 75, 60, 90]
-})
-st.bar_chart(bar_data.set_index('제품'))
-
-# 2️⃣8️⃣ 면적 차트 - 누적 데이터를 면적으로 표시합니다
-area_data = pd.DataFrame({
-    '날짜': pd.date_range('2024-01-01', periods=10),
-    'A': np.random.randint(10, 50, 10),
-    'B': np.random.randint(20, 60, 10),
-    'C': np.random.randint(30, 70, 10)
-}).set_index('날짜')
-st.area_chart(area_data)
-
-st.divider()
-
-# 2️⃣9️⃣ 알림 및 상태 메시지
-st.subheader("⚠️ 알림 및 메시지")
-
-# 3️⃣0️⃣ 성공 메시지 - 성공 상태를 나타냅니다
-st.success("작업이 완료되었습니다! ✓")
-
-# 3️⃣1️⃣ 정보 메시지 - 일반적인 정보를 표시합니다
-st.info("이것은 정보입니다.")
-
-# 3️⃣2️⃣ 경고 메시지 - 주의가 필요한 내용을 표시합니다
-st.warning("주의: 이 작업은 되돌릴 수 없습니다.")
-
-# 3️⃣3️⃣ 에러 메시지 - 오류를 나타냅니다
-st.error("오류가 발생했습니다!")
-
-st.divider()
-
-# 3️⃣4️⃣ 컨테이너 및 레이아웃
-st.subheader("🎨 고급 레이아웃")
-
-# 3️⃣5️⃣ 확장 가능한 섹션 - 클릭으로 펼칠 수 있습니다
-with st.expander("📌 추가 정보 보기"):
-    st.write("이것은 숨겨진 내용입니다.")
-    st.write("클릭하면 펼쳐집니다.")
-
-# 3️⃣6️⃣ 탭 - 여러 콘텐츠를 탭으로 구분합니다
-tab1, tab2, tab3 = st.tabs(["탭 1", "탭 2", "탭 3"])
-
-with tab1:
-    st.write("첫 번째 탭 내용")
-    st.write("여기에 다양한 요소를 넣을 수 있습니다.")
-
-with tab2:
-    st.write("두 번째 탭 내용")
-    st.write("각 탭은 독립적인 콘텐츠를 가집니다.")
-
-with tab3:
-    st.write("세 번째 탭 내용")
-    st.write("탭은 좋은 네비게이션 방법입니다.")
-
-# 3️⃣7️⃣ 사이드바 - 화면 왼쪽에 고정된 영역입니다
-st.sidebar.title("🔧 설정")
-st.sidebar.write("이것은 사이드바입니다.")
-sidebar_value = st.sidebar.slider("사이드바 슬라이더", 0, 100, 50)
-st.write(f"사이드바 값: {sidebar_value}")
-
-st.divider()
-
-# 3️⃣8️⃣ 코드 블록 - 코드를 예쁘게 표시합니다
-st.subheader("💻 코드")
-st.code("""
-def hello(name):
-    return f"안녕하세요, {name}!"
-
-print(hello("Streamlit"))
-""", language="python")
-
-# 3️⃣9️⃣ LaTeX 수식 - 수학 수식을 표시합니다
-st.subheader("📐 수식")
-st.latex(r"y = ax^2 + bx + c")
-
-# 4️⃣0️⃣ 컬럼 (다중 열)을 이용한 복잡한 레이아웃
-st.subheader("🏗️ 복잡한 레이아웃")
-col1, col2 = st.columns([2, 1])
-with col1:
-    st.write("이 부분은 2배 더 넓습니다.")
-with col2:
-    st.write("이 부분은 1배입니다.")
+# 페이지 라우팅
+if st.session_state.page == "university_select":
+    page_university_select()
+elif st.session_state.page == "converted_score_input":
+    page_converted_score_input()
+elif st.session_state.page == "practical_score_input":
+    page_practical_score_input()
+elif st.session_state.page == "result":
+    page_result()
