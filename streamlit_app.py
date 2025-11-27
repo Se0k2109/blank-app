@@ -5,7 +5,9 @@ st.set_page_config(page_title="가천대학교 체력시험 합격 판정 시스
 
 # 세션 상태 초기화
 if 'page' not in st.session_state:
-    st.session_state.page = "university_select"
+    st.session_state.page = "gender_select"
+if 'gender' not in st.session_state:
+    st.session_state.gender = None
 if 'selected_university' not in st.session_state:
     st.session_state.selected_university = None
 if 'converted_score' not in st.session_state:
@@ -18,21 +20,21 @@ if 'practical_scores' not in st.session_state:
         "메디신볼던지기": None
     }
 
-# 가천대학교 기준 정보
+# 가천대학교 기준 정보 (성별별로 구분)
 UNIVERSITY_STANDARDS = {
     "가천대학교": {
         "converted_max": 300,
         "practical_max": 700,
-        "events": {
+        "male": {
             "배근력검사": {
                 "standard": 221,
                 "max_score": 175,
                 "unit": "kg",
                 "decreasing": True,
-                "per_grade": 4
+                "per_grade": 5
             },
             "10m왕복달리기": {
-                "standard": 8.0,
+                "standard": 8.00,
                 "max_score": 175,
                 "unit": "초",
                 "decreasing": True,
@@ -52,13 +54,44 @@ UNIVERSITY_STANDARDS = {
                 "decreasing": False,
                 "per_grade": 0.2
             }
+        },
+        "female": {
+            "배근력검사": {
+                "standard": 161,
+                "max_score": 175,
+                "unit": "kg",
+                "decreasing": True,
+                "per_grade": 5
+            },
+            "10m왕복달리기": {
+                "standard": 9.20,
+                "max_score": 175,
+                "unit": "초",
+                "decreasing": True,
+                "per_grade": 0.1
+            },
+            "제자리멀리뛰기": {
+                "standard": 240,
+                "max_score": 175,
+                "unit": "cm",
+                "decreasing": False,
+                "per_grade": 5
+            },
+            "메디신볼던지기": {
+                "standard": 9.8,
+                "max_score": 175,
+                "unit": "m",
+                "decreasing": False,
+                "per_grade": 0.2
+            }
         }
     }
 }
 
-def calculate_practical_score(event_name, performance, university="가천대학교"):
+def calculate_practical_score(event_name, performance, university="가천대학교", gender="남자"):
     """실기 성적에 따른 점수 계산"""
-    standards = UNIVERSITY_STANDARDS[university]["events"][event_name]
+    gender_key = "male" if gender == "남자" else "female"
+    standards = UNIVERSITY_STANDARDS[university][gender_key][event_name]
     
     standard = standards["standard"]
     max_score = standards["max_score"]
@@ -78,6 +111,28 @@ def calculate_practical_score(event_name, performance, university="가천대학�
         score = max(0, score)
     
     return score
+
+def page_gender_select():
+    """1단계: 성별 선택"""
+    st.title("🎫 체력시험 합격 판정 시스템")
+    st.subheader("1단계: 성별 선택")
+    
+    col1, col2 = st.columns([1, 2])
+    
+    with col1:
+        st.info("성별에 따라 기준이 다릅니다.")
+    
+    with col2:
+        selected = st.radio(
+            "성별를 선택하세요:",
+            ["남자", "여자"],
+            horizontal=True
+        )
+    
+    if st.button("다음 단계로 진행 →"):
+        st.session_state.gender = selected
+        st.session_state.page = "university_select"
+        st.rerun()
 
 def page_university_select():
     """1단계: 대학교 선택"""
@@ -145,10 +200,13 @@ def page_practical_score_input():
     st.subheader("3단계: 실기 종목별 성적 입력")
     
     university = st.session_state.selected_university
+    gender = st.session_state.gender
     converted_score = st.session_state.converted_score
-    events = UNIVERSITY_STANDARDS[university]["events"]
+    gender_key = "male" if gender == "남자" else "female"
+    events = UNIVERSITY_STANDARDS[university][gender_key]
     
     st.write(f"**선택된 대학교:** {university}")
+    st.write(f"**성별:** {gender}")
     st.write(f"**환산점수:** {converted_score}점")
     st.divider()
     
@@ -198,11 +256,14 @@ def page_result():
     st.subheader("4단계: 최종 결과")
     
     university = st.session_state.selected_university
+    gender = st.session_state.gender
     converted_score = st.session_state.converted_score
     practical_scores = st.session_state.practical_scores
-    events = UNIVERSITY_STANDARDS[university]["events"]
+    gender_key = "male" if gender == "남자" else "female"
+    events = UNIVERSITY_STANDARDS[university][gender_key]
     
     st.write(f"**선택된 대학교:** {university}")
+    st.write(f"**성별:** {gender}")
     st.divider()
     
     st.write("### 📊 환산점수")
@@ -216,7 +277,7 @@ def page_result():
     practical_details = []
     
     for event_name, performance in practical_scores.items():
-        score = calculate_practical_score(event_name, performance, university)
+        score = calculate_practical_score(event_name, performance, university, gender)
         total_practical_score += score
         
         standards = events[event_name]
@@ -278,7 +339,8 @@ def page_result():
     
     with col2:
         if st.button("처음부터 다시 시작 🔄"):
-            st.session_state.page = "university_select"
+            st.session_state.page = "gender_select"
+            st.session_state.gender = None
             st.session_state.selected_university = None
             st.session_state.converted_score = None
             st.session_state.practical_scores = {
@@ -290,7 +352,9 @@ def page_result():
             st.rerun()
 
 # 페이지 라우팅
-if st.session_state.page == "university_select":
+if st.session_state.page == "gender_select":
+    page_gender_select()
+elif st.session_state.page == "university_select":
     page_university_select()
 elif st.session_state.page == "converted_score_input":
     page_converted_score_input()
