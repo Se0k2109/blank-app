@@ -119,56 +119,68 @@ def page_gender_select():
     st.title("🎫 체력시험 합격 판정 시스템")
     st.subheader("1단계: 성별 선택")
     
-    col1, col2 = st.columns([1, 2])
+    st.write("시험을 응시할 성별을 선택하세요. (성별에 따라 기준이 다릅니다)")
+    st.divider()
     
-    with col1:
-        st.info("성별에 따라 기준이 다릅니다.")
+    col1, col2, col3 = st.columns([1, 2, 1])
     
     with col2:
         selected = st.radio(
-            "성별를 선택하세요:",
+            "성별 선택:",
             ["남자", "여자"],
-            horizontal=True
+            horizontal=True,
+            label_visibility="collapsed"
         )
     
-    if st.button("다음 단계로 진행 →"):
+    st.divider()
+    
+    if st.button("다음: 대학교 선택 ▶", use_container_width=True):
         st.session_state.gender = selected
         st.session_state.page = "university_select"
         st.rerun()
 
 def page_university_select():
-    """1단계: 대학교 선택"""
+    """2단계: 대학교 선택"""
     st.title("🏫 체력시험 합격 판정 시스템")
-    st.subheader("1단계: 대학교 선택")
+    st.subheader("2단계: 대학교 선택")
     
-    col1, col2 = st.columns([1, 2])
+    st.write("아래에서 대학교를 선택하여 진행하세요.")
+    st.divider()
     
-    with col1:
-        st.info("현재 가천대학교만 지원합니다.")
+    # 카드형 대학교 선택 UI
+    col1, col2, col3 = st.columns([1, 2, 1])
     
     with col2:
-        selected = st.selectbox(
-            "대학교를 선택하세요:",
-            list(UNIVERSITY_STANDARDS.keys()),
-            key="university_select"
-        )
-    
-    if st.button("다음 단계로 진행 →"):
-        st.session_state.selected_university = selected
-        st.session_state.page = "converted_score_input"
-        st.rerun()
+        # 가천대학교 카드
+        with st.container(border=True):
+            st.markdown("<div style='text-align: center;'>", unsafe_allow_html=True)
+            st.markdown("## 🏫 가천대학교")
+            st.markdown("**Gachon University**", unsafe_allow_html=True)
+            st.markdown("---")
+            st.caption("체력시험 합격 판정 시스템")
+            st.markdown("</div>", unsafe_allow_html=True)
+            
+            if st.button("✅ 가천대학교 선택", use_container_width=True, key="gachon_select"):
+                st.session_state.selected_university = "가천대학교"
+                st.session_state.page = "converted_score_input"
+                st.rerun()
 
 def page_converted_score_input():
-    """2단계: 환산점수 입력"""
+    """3단계: 환산점수 입력"""
     st.title("🏫 체력시험 합격 판정 시스템")
-    st.subheader("2단계: 환산점수 입력")
+    st.subheader("3단계: 환산점수 입력")
     
     university = st.session_state.selected_university
     max_converted = UNIVERSITY_STANDARDS[university]["converted_max"]
     
-    st.write(f"**선택된 대학교:** {university}")
-    st.write(f"**환산점수 만점:** {max_converted}점")
+    col1, col2 = st.columns(2)
+    with col1:
+        st.metric("선택된 대학교", university)
+    with col2:
+        st.metric("환산점수 만점", f"{max_converted}점")
+    
     st.write("**기준은 만점 기준입니다.**")
+    st.divider()
     
     col1, col2 = st.columns([1, 1])
     
@@ -183,23 +195,24 @@ def page_converted_score_input():
     with col2:
         st.metric("입력된 환산점수", f"{converted_score}점")
     
+    st.divider()
     col1, col2 = st.columns([1, 1])
     
     with col1:
-        if st.button("이전 단계로 ←"):
+        if st.button("◀ 이전 단계로", use_container_width=True):
             st.session_state.page = "university_select"
             st.rerun()
     
     with col2:
-        if st.button("다음 단계로 진행 →"):
+        if st.button("다음: 성적입력 ▶", use_container_width=True):
             st.session_state.converted_score = converted_score
             st.session_state.page = "practical_score_input"
             st.rerun()
 
 def page_practical_score_input():
-    """3단계: 실기 점수 입력"""
+    """4단계: 실기 점수 입력"""
     st.title("🏫 체력시험 합격 판정 시스템")
-    st.subheader("3단계: 실기 종목별 성적 입력")
+    st.subheader("4단계: 실기 종목별 성적 입력")
     
     university = st.session_state.selected_university
     gender = st.session_state.gender
@@ -207,37 +220,69 @@ def page_practical_score_input():
     gender_key = "male" if gender == "남자" else "female"
     events = UNIVERSITY_STANDARDS[university][gender_key]
     
-    st.write(f"**선택된 대학교:** {university}")
-    st.write(f"**성별:** {gender}")
-    st.write(f"**환산점수:** {converted_score}점")
-    st.write("**기준은 만점 기준이며, 1등급감점 = 1감(8.75점) 입니다.**")
+    # 상단 정보 표시
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.metric("대학교", university)
+    with col2:
+        st.metric("성별", gender)
+    with col3:
+        st.metric("환산점수", f"{converted_score}점")
+    
+    st.divider()
+    st.write("**📌 입력 기준:** 만점 기준이며, 1등급감점 = 1감(8.75점) 입니다.")
     st.divider()
     
-    for event_name, standards in events.items():
-        st.write(f"### {event_name}")
+    # 깔끔한 테이블 형식으로 입력칸 정리
+    st.write("#### 📊 실기 종목 성적 입력")
+    
+    # 테이블 헤더
+    col_header1, col_header2, col_header3, col_header4 = st.columns([2.5, 1.5, 1, 1.5])
+    with col_header1:
+        st.write("**종목명**")
+    with col_header2:
+        st.write("**기준(만점)**")
+    with col_header3:
+        st.write("**단위**")
+    with col_header4:
+        st.write("**성적입력**")
+    
+    st.divider()
+    
+    # 각 종목별 입력
+    for idx, (event_name, standards) in enumerate(events.items()):
+        col1, col2, col3, col4 = st.columns([2.5, 1.5, 1, 1.5])
         
-        # 입력칸에는 개별 만점/감점 기준을 표시하지 않습니다 (요청사항)
-        st.write(f"**기준(만점 기준):** {standards['standard']} {standards['unit']}")
+        with col1:
+            st.write(f"**{event_name}**")
         
-        performance = st.number_input(
-            f"{event_name} 성적 입력 ({standards['unit']}):",
-            value=float(st.session_state.practical_scores[event_name]) if st.session_state.practical_scores[event_name] is not None else 0.0,
-            step=0.1,
-            key=f"input_{event_name}"
-        )
+        with col2:
+            st.write(f"{standards['standard']}")
         
-        st.session_state.practical_scores[event_name] = performance
-        st.divider()
+        with col3:
+            st.write(f"{standards['unit']}")
+        
+        with col4:
+            performance = st.number_input(
+                f"성적 입력",
+                value=float(st.session_state.practical_scores[event_name]) if st.session_state.practical_scores[event_name] is not None else 0.0,
+                step=0.1,
+                key=f"input_{event_name}",
+                label_visibility="collapsed"
+            )
+            st.session_state.practical_scores[event_name] = performance
+    
+    st.divider()
     
     col1, col2 = st.columns([1, 1])
     
     with col1:
-        if st.button("이전 단계로 ←"):
+        if st.button("◀ 이전 단계로", use_container_width=True):
             st.session_state.page = "converted_score_input"
             st.rerun()
     
     with col2:
-        if st.button("최종 결과 보기 →"):
+        if st.button("다음: 최종 결과 보기 ▶", use_container_width=True):
             st.session_state.page = "result"
             st.rerun()
 
@@ -253,8 +298,12 @@ def page_result():
     gender_key = "male" if gender == "남자" else "female"
     events = UNIVERSITY_STANDARDS[university][gender_key]
     
-    st.write(f"**선택된 대학교:** {university}")
-    st.write(f"**성별:** {gender}")
+    # 상단 정보 표시
+    col1, col2 = st.columns(2)
+    with col1:
+        st.metric("선택된 대학교", university)
+    with col2:
+        st.metric("성별", gender)
     st.divider()
     
     st.write("### 📊 환산점수")
@@ -279,16 +328,26 @@ def page_result():
             "획득점수": f"{score:.2f}점"
         })
     
+    # 테이블 형식으로 실기 성적 표시
+    col_h1, col_h2, col_h3 = st.columns([2, 1.5, 1.5])
+    with col_h1:
+        st.write("**종목명**")
+    with col_h2:
+        st.write("**성적**")
+    with col_h3:
+        st.write("**획득점수**")
+    st.divider()
+    
     for detail in practical_details:
-        col1, col2, col3 = st.columns([2, 1, 1])
+        col1, col2, col3 = st.columns([2, 1.5, 1.5])
         with col1:
-            st.write(f"**{detail['종목']}**")
+            st.write(detail['종목'])
         with col2:
             st.write(detail['성적'])
         with col3:
             st.write(detail['획득점수'])
-        st.divider()
     
+    st.divider()
     st.metric("실기 총점", f"{total_practical_score:.2f}점 / {UNIVERSITY_STANDARDS[university]['practical_max']}점")
     
     st.divider()
@@ -361,12 +420,12 @@ def page_result():
     col1, col2 = st.columns([1, 1])
     
     with col1:
-        if st.button("이전 단계로 ←"):
+        if st.button("◀ 이전 단계로", use_container_width=True):
             st.session_state.page = "practical_score_input"
             st.rerun()
     
     with col2:
-        if st.button("처음부터 다시 시작 🔄"):
+        if st.button("🔄 처음부터 다시 시작", use_container_width=True):
             st.session_state.page = "gender_select"
             st.session_state.gender = None
             st.session_state.selected_university = None
