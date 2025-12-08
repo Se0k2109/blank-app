@@ -32,7 +32,8 @@ UNIVERSITY_STANDARDS = {
                     "max_score": 175,
                     "unit": "kg",
                     "decreasing": False,
-                    "per_grade": 5
+                    "per_grade": 5,
+                    "score_per_grade": 8.75
                 },
             "10m왕복달리기": {
                 "standard": 8.00,
@@ -46,14 +47,16 @@ UNIVERSITY_STANDARDS = {
                 "max_score": 175,
                 "unit": "cm",
                 "decreasing": False,
-                "per_grade": 5
+                "per_grade": 5,
+                "score_per_grade": 8.75
             },
             "메디신볼던지기": {
                 "standard": 12.5,
                 "max_score": 175,
                 "unit": "m",
                 "decreasing": False,
-                "per_grade": 0.2
+                "per_grade": 0.2,
+                "score_per_grade": 8.75
             }
         },
         "female": {
@@ -62,7 +65,8 @@ UNIVERSITY_STANDARDS = {
                     "max_score": 175,
                     "unit": "kg",
                     "decreasing": False,
-                    "per_grade": 5
+                    "per_grade": 5,
+                    "score_per_grade": 8.75
                 },
             "10m왕복달리기": {
                 "standard": 9.20,
@@ -76,15 +80,88 @@ UNIVERSITY_STANDARDS = {
                 "max_score": 175,
                 "unit": "cm",
                 "decreasing": False,
-                "per_grade": 5
+                "per_grade": 5,
+                "score_per_grade": 8.75
             },
             "메디신볼던지기": {
                 "standard": 9.8,
                 "max_score": 175,
                 "unit": "m",
                 "decreasing": False,
-                "per_grade": 0.2
+                "per_grade": 0.2,
+                "score_per_grade": 8.75
             }
+        }
+    }
+}
+
+# 화면에 표시할 대학 명칭 매핑
+DISPLAY_NAMES = {
+    "가천대학교": "가천대학교 체육학부",
+    "상명대학교": "상명대학교 스포츠건강관리전공"
+}
+
+# 대학 로고(로컬 경로 또는 원격 URL). 기본값은 비어있음 — 원하는 URL 또는 이미지 파일 경로로 바꿔주세요.
+# 예시: DISPLAY_LOGOS['가천대학교'] = 'https://example.com/gachon_logo.png'
+DISPLAY_LOGOS = {
+    "가천대학교": "",
+    "상명대학교": ""
+}
+
+# 상명대학교 추가 (스포츠건강관리전공)
+UNIVERSITY_STANDARDS["상명대학교"] = {
+    "converted_max": 300,
+    "practical_max": 700,
+    "male": {
+        "제자리멀리뛰기": {
+            "standard": 305,
+            "max_score": 245,
+            "unit": "cm",
+            "decreasing": False,
+            "per_grade": 3,
+            "score_per_grade": 17.5
+        },
+        "메디신볼던지기": {
+            "standard": 12.7,
+            "max_score": 210,
+            "unit": "m",
+            "decreasing": False,
+            "per_grade": 0.2,
+            "score_per_grade": 15
+        },
+        "20m왕복달리기": {
+            "standard": 15.0,
+            "max_score": 245,
+            "unit": "초",
+            "decreasing": True,
+            "per_grade": 0.2,
+            "score_per_grade": 17.5
+        }
+    },
+    "female": {
+        "제자리멀리뛰기": {
+            "standard": 250,
+            "max_score": 245,
+            "unit": "cm",
+            "decreasing": False,
+            "per_grade": 3,
+            "score_per_grade": 17.5
+        },
+        "메디신볼던지기": {
+            "standard": 10.4,
+            "max_score": 210,
+            "unit": "m",
+            "decreasing": False,
+            "per_grade": 0.2,
+            "score_per_grade": 15
+        },
+        "20m왕복달리기": {
+            "standard": 16.4,
+            "max_score": 245,
+            "unit": "초",
+            "decreasing": True,
+            "per_grade": 0.2,
+            "score_per_grade": 17.5
         }
     }
 }
@@ -107,9 +184,11 @@ def calculate_practical_score(event_name, performance, university="가천대학�
     if difference >= 0:
         score = max_score
     else:
-        # 1등급감점 = 1감(8.75점)
+        # 등급 하락 수
         grades_down = abs(difference) / per_grade
-        score = max_score - (grades_down * 8.75)
+        # 종목별 등급당 점수 감소폭 (기본 8.75)
+        score_per_grade = standards.get("score_per_grade", 8.75)
+        score = max_score - (grades_down * score_per_grade)
         score = max(0, score)
     
     return score
@@ -147,23 +226,51 @@ def page_university_select():
     st.write("아래에서 대학교를 선택하여 진행하세요.")
     st.divider()
     
-    # 카드형 대학교 선택 UI
-    col1, col2, col3 = st.columns([1, 2, 1])
-    
-    with col2:
-        # 가천대학교 카드
-        with st.container(border=True):
-            st.markdown("<div style='text-align: center;'>", unsafe_allow_html=True)
-            st.markdown("## 🏫 가천대학교")
-            st.markdown("**Gachon University**", unsafe_allow_html=True)
-            st.markdown("---")
-            st.caption("체력시험 합격 판정 시스템")
-            st.markdown("</div>", unsafe_allow_html=True)
-            
-            if st.button("✅ 가천대학교 선택", use_container_width=True, key="gachon_select"):
-                st.session_state.selected_university = "가천대학교"
-                st.session_state.page = "converted_score_input"
-                st.rerun()
+    # 카드형 대학교 선택 UI (두 개의 카드로 표시)
+    left_col, right_col = st.columns([1, 1])
+
+    # 가천대학교 카드 (왼쪽)
+    with left_col.container():
+        st.markdown("<div style='text-align: center; padding: 10px; border: 1px solid #eee; border-radius:8px;'>", unsafe_allow_html=True)
+        # 로고가 있으면 표시
+        logo_g = DISPLAY_LOGOS.get('가천대학교')
+        if logo_g:
+            try:
+                st.image(logo_g, width=140)
+            except Exception:
+                st.write("")
+        st.markdown("## 🏫 가천대학교 체육학부")
+        st.markdown("**Gachon University - 체육학부**", unsafe_allow_html=True)
+        st.markdown("---")
+        st.caption("환산점수 300 / 실기 700 (가천대학교 기준)")
+        st.markdown("</div>", unsafe_allow_html=True)
+        if st.button("✅ 선택: 가천대학교 체육학부", use_container_width=True, key="gachon_select"):
+            st.session_state.selected_university = "가천대학교"
+            st.session_state.practical_scores = {}
+            st.session_state.converted_score = 0
+            st.session_state.page = "converted_score_input"
+            st.rerun()
+
+    # 상명대학교 카드 (오른쪽)
+    with right_col.container():
+        st.markdown("<div style='text-align: center; padding: 10px; border: 1px solid #eee; border-radius:8px;'>", unsafe_allow_html=True)
+        logo_s = DISPLAY_LOGOS.get('상명대학교')
+        if logo_s:
+            try:
+                st.image(logo_s, width=140)
+            except Exception:
+                st.write("")
+        st.markdown("## 🏫 상명대학교 스포츠건강관리전공")
+        st.markdown("**Sangmyung University - 스포츠건강관리전공**", unsafe_allow_html=True)
+        st.markdown("---")
+        st.caption("환산점수 300 / 실기 700 (상명대학교 기준)")
+        st.markdown("</div>", unsafe_allow_html=True)
+        if st.button("✅ 선택: 상명대학교 스포츠건강관리전공", use_container_width=True, key="sangmyung_select"):
+            st.session_state.selected_university = "상명대학교"
+            st.session_state.practical_scores = {}
+            st.session_state.converted_score = 0
+            st.session_state.page = "converted_score_input"
+            st.rerun()
 
 def page_converted_score_input():
     """3단계: 환산점수 입력"""
@@ -173,9 +280,10 @@ def page_converted_score_input():
     university = st.session_state.selected_university
     max_converted = UNIVERSITY_STANDARDS[university]["converted_max"]
     
+    display_uni = DISPLAY_NAMES.get(university, university)
     col1, col2 = st.columns(2)
     with col1:
-        st.metric("선택된 대학교", university)
+        st.metric("선택된 대학교", display_uni)
     with col2:
         st.metric("환산점수 만점", f"{max_converted}점")
     
@@ -221,23 +329,24 @@ def page_practical_score_input():
     events = UNIVERSITY_STANDARDS[university][gender_key]
     
     # 상단 정보 표시
+    display_uni = DISPLAY_NAMES.get(university, university)
     col1, col2, col3 = st.columns(3)
     with col1:
-        st.metric("대학교", university)
+        st.metric("대학교", display_uni)
     with col2:
         st.metric("성별", gender)
     with col3:
         st.metric("환산점수", f"{converted_score}점")
     
     st.divider()
-    st.write("**📌 입력 기준:** 만점 기준이며, 1등급감점 = 1감(8.75점) 입니다.")
+    st.write("**📌 입력 기준:** 기준은 만점 기준이며, 각 종목의 1등급당 점수는 표에서 확인하세요.")
     st.divider()
     
     # 깔끔한 테이블 형식으로 입력칸 정리
     st.write("#### 📊 실기 종목 성적 입력")
     
-    # 테이블 헤더
-    col_header1, col_header2, col_header3, col_header4 = st.columns([2.5, 1.5, 1, 1.5])
+    # 테이블 헤더 (등급 단위 컬럼 추가)
+    col_header1, col_header2, col_header3, col_header4, col_header5 = st.columns([2.5, 1.2, 1, 2.2, 1.3])
     with col_header1:
         st.write("**종목명**")
     with col_header2:
@@ -245,13 +354,15 @@ def page_practical_score_input():
     with col_header3:
         st.write("**단위**")
     with col_header4:
+        st.write("**등급 단위 (1등급당 점수)**")
+    with col_header5:
         st.write("**성적입력**")
     
     st.divider()
     
     # 각 종목별 입력
     for idx, (event_name, standards) in enumerate(events.items()):
-        col1, col2, col3, col4 = st.columns([2.5, 1.5, 1, 1.5])
+        col1, col2, col3, col4, col5 = st.columns([2.5, 1.2, 1, 2.2, 1.3])
         
         with col1:
             st.write(f"**{event_name}**")
@@ -261,8 +372,13 @@ def page_practical_score_input():
         
         with col3:
             st.write(f"{standards['unit']}")
-        
+
         with col4:
+            score_per_grade = standards.get('score_per_grade', 8.75)
+            unit_per_grade = standards.get('per_grade')
+            st.write(f"1등급 = {score_per_grade}점 / {unit_per_grade}{standards['unit']}")
+
+        with col5:
             performance = st.number_input(
                 f"성적 입력",
                 value=float(st.session_state.practical_scores[event_name]) if st.session_state.practical_scores[event_name] is not None else 0.0,
@@ -299,9 +415,10 @@ def page_result():
     events = UNIVERSITY_STANDARDS[university][gender_key]
     
     # 상단 정보 표시
+    display_uni = DISPLAY_NAMES.get(university, university)
     col1, col2 = st.columns(2)
     with col1:
-        st.metric("선택된 대학교", university)
+        st.metric("선택된 대학교", display_uni)
     with col2:
         st.metric("성별", gender)
     st.divider()
@@ -430,12 +547,7 @@ def page_result():
             st.session_state.gender = None
             st.session_state.selected_university = None
             st.session_state.converted_score = None
-            st.session_state.practical_scores = {
-                "배근력검사": None,
-                "10m왕복달리기": None,
-                "제자리멀리뛰기": None,
-                "메디신볼던지기": None
-            }
+            st.session_state.practical_scores = {}
             st.rerun()
 
 # 페이지 라우팅
