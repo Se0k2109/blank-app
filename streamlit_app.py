@@ -14,12 +14,7 @@ if 'selected_university' not in st.session_state:
 if 'naesin_score' not in st.session_state:
     st.session_state.naesin_score = None
 if 'practical_scores' not in st.session_state:
-    st.session_state.practical_scores = {
-        "배근력검사": None,
-        "10m왕복달리기": None,
-        "제자리멀리뛰기": None,
-        "메디신볼던지기": None
-    }
+    st.session_state.practical_scores = {}
 
 # 가천대학교 기준 정보 (성별별로 구분)
 UNIVERSITY_STANDARDS = {
@@ -329,6 +324,11 @@ def page_practical_score_input():
     naesin_score = st.session_state.naesin_score
     gender_key = "male" if gender == "남자" else "female"
     events = UNIVERSITY_STANDARDS[university][gender_key]
+    
+    # practical_scores 동적 초기화 (선택된 대학과 성별의 종목으로)
+    for event_name in events.keys():
+        if event_name not in st.session_state.practical_scores:
+            st.session_state.practical_scores[event_name] = None
     
     # 상단 정보 표시
     display_uni = DISPLAY_NAMES.get(university, university)
