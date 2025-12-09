@@ -220,107 +220,59 @@ def page_gender_select():
 
 def page_university_select():
     """2단계: 대학교 선택"""
-    st.title("🏫 체력시험 합격 판정 시스템")
+    st.title("체력시험 합격 판정 시스템")
     st.subheader("2단계: 대학교 선택")
-    
+
     st.write("아래에서 대학교를 선택하여 진행하세요.")
     st.divider()
-    
-        # 쿼리 파라미터로 선택 감지 (HTML 버튼이 GET으로 ?select=학교 로 보냅니다)
-        params = st.experimental_get_query_params()
-        if 'select' in params:
-                sel = params.get('select')[0]
-                # 세션 상태에 반영하고 쿼리 제거 후 재실행
-                if sel in UNIVERSITY_STANDARDS:
-                        st.session_state.selected_university = sel
-                        st.session_state.practical_scores = {}
-                        st.session_state.converted_score = 0
-                        st.session_state.page = "converted_score_input"
-                        # 쿼리 파라미터 초기화
-                        st.experimental_set_query_params()
-                        st.rerun()
 
-        col1, col2 = st.columns(2)
+    # 쿼리 파라미터로 선택 감지 (HTML 버튼이 GET으로 ?select=학교 로 보냅니다)
+    params = st.experimental_get_query_params()
+    if 'select' in params:
+        sel = params.get('select')[0]
+        # 세션 상태에 반영하고 쿼리 제거 후 재실행
+        if sel in UNIVERSITY_STANDARDS:
+            st.session_state.selected_university = sel
+            st.session_state.practical_scores = {}
+            st.session_state.converted_score = 0
+            st.session_state.page = "converted_score_input"
+            # 쿼리 파라미터 초기화
+            st.experimental_set_query_params()
+            st.rerun()
 
-        # 가천대학교: 이미지 + 텍스트를 포함한 HTML 버튼 (form GET)
-        with col1:
-                logo_g = DISPLAY_LOGOS.get('가천대학교', '')
-                html_g = f"""
-                <form method='get'>
-                    <button name='select' value='가천대학교' style='display:flex; align-items:center; gap:12px; width:100%; padding:14px; border-radius:10px; border:1px solid #d0e8d8; background:linear-gradient(180deg,#ffffff,#f6fff7); font-size:16px; cursor:pointer;'>
-                        <img src='{logo_g}' style='width:56px; height:56px; object-fit:contain;'/>
-                        <div style='text-align:left;'>
-                            <div style='font-weight:600;'>가천대학교 체육학부</div>
-                            <div style='font-size:13px; color:#444;'>환산 300 / 실기 700</div>
-                        </div>
-                    </button>
-                </form>
-                """
-                st.markdown(html_g, unsafe_allow_html=True)
+    col1, col2 = st.columns(2)
 
-        # 상명대학교: 이미지 + 텍스트를 포함한 HTML 버튼 (form GET)
-        with col2:
-                logo_s = DISPLAY_LOGOS.get('상명대학교', '')
-                html_s = f"""
-                <form method='get'>
-                    <button name='select' value='상명대학교' style='display:flex; align-items:center; gap:12px; width:100%; padding:14px; border-radius:10px; border:1px solid #d6e9ff; background:linear-gradient(180deg,#ffffff,#f6faff); font-size:16px; cursor:pointer;'>
-                        <img src='{logo_s}' style='width:56px; height:56px; object-fit:contain;'/>
-                        <div style='text-align:left;'>
-                            <div style='font-weight:600;'>상명대학교 스포츠건강관리</div>
-                            <div style='font-size:13px; color:#444;'>환산 300 / 실기 700</div>
-                        </div>
-                    </button>
-                </form>
-                """
-                st.markdown(html_s, unsafe_allow_html=True)
-    
-        # 쿼리 파라미터로 선택 감지 (HTML 버튼이 GET으로 ?select=학교 로 보냅니다)
-        params = st.experimental_get_query_params()
-        if 'select' in params:
-                sel = params.get('select')[0]
-                # 세션 상태에 반영하고 쿼리 제거 후 재실행
-                if sel in UNIVERSITY_STANDARDS:
-                        st.session_state.selected_university = sel
-                        st.session_state.practical_scores = {}
-                        st.session_state.converted_score = 0
-                        st.session_state.page = "converted_score_input"
-                        # 쿼리 파라미터 초기화
-                        st.experimental_set_query_params()
-                        st.rerun()
+    # 가천대학교: 이미지 + 텍스트를 포함한 HTML 버튼 (form GET)
+    with col1:
+        logo_g = DISPLAY_LOGOS.get('가천대학교', '')
+        html_g = f"""
+<form method='get'>
+  <button name='select' value='가천대학교' style='display:flex; align-items:center; gap:12px; width:100%; padding:14px; border-radius:10px; border:1px solid #d0e8d8; background:linear-gradient(180deg,#ffffff,#f6fff7); font-size:16px; cursor:pointer;'>
+    <img src='{logo_g}' style='width:56px; height:56px; object-fit:contain;'/>
+    <div style='text-align:left;'>
+      <div style='font-weight:600;'>가천대학교 체육학부</div>
+      <div style='font-size:13px; color:#444;'>환산 300 / 실기 700</div>
+    </div>
+  </button>
+</form>
+        """
+        st.markdown(html_g, unsafe_allow_html=True)
 
-        col1, col2 = st.columns(2)
-
-        # 가천대학교: 이미지 + 텍스트를 포함한 HTML 버튼 (form GET)
-        with col1:
-                logo_g = DISPLAY_LOGOS.get('가천대학교', '')
-                html_g = f"""
-                <form method='get'>
-                    <button name='select' value='가천대학교' style='display:flex; align-items:center; gap:12px; width:100%; padding:14px; border-radius:10px; border:1px solid #d0e8d8; background:linear-gradient(180deg,#ffffff,#f6fff7); font-size:16px; cursor:pointer;'>
-                        <img src='{logo_g}' style='width:56px; height:56px; object-fit:contain;'/>
-                        <div style='text-align:left;'>
-                            <div style='font-weight:600;'>가천대학교 체육학부</div>
-                            <div style='font-size:13px; color:#444;'>환산 300 / 실기 700</div>
-                        </div>
-                    </button>
-                </form>
-                """
-                st.markdown(html_g, unsafe_allow_html=True)
-
-        # 상명대학교: 이미지 + 텍스트를 포함한 HTML 버튼 (form GET)
-        with col2:
-                logo_s = DISPLAY_LOGOS.get('상명대학교', '')
-                html_s = f"""
-                <form method='get'>
-                    <button name='select' value='상명대학교' style='display:flex; align-items:center; gap:12px; width:100%; padding:14px; border-radius:10px; border:1px solid #d6e9ff; background:linear-gradient(180deg,#ffffff,#f6faff); font-size:16px; cursor:pointer;'>
-                        <img src='{logo_s}' style='width:56px; height:56px; object-fit:contain;'/>
-                        <div style='text-align:left;'>
-                            <div style='font-weight:600;'>상명대학교 스포츠건강관리</div>
-                            <div style='font-size:13px; color:#444;'>환산 300 / 실기 700</div>
-                        </div>
-                    </button>
-                </form>
-                """
-                st.markdown(html_s, unsafe_allow_html=True)
+    # 상명대학교: 이미지 + 텍스트를 포함한 HTML 버튼 (form GET)
+    with col2:
+        logo_s = DISPLAY_LOGOS.get('상명대학교', '')
+        html_s = f"""
+<form method='get'>
+  <button name='select' value='상명대학교' style='display:flex; align-items:center; gap:12px; width:100%; padding:14px; border-radius:10px; border:1px solid #d6e9ff; background:linear-gradient(180deg,#ffffff,#f6faff); font-size:16px; cursor:pointer;'>
+    <img src='{logo_s}' style='width:56px; height:56px; object-fit:contain;'/>
+    <div style='text-align:left;'>
+      <div style='font-weight:600;'>상명대학교 스포츠건강관리</div>
+      <div style='font-size:13px; color:#444;'>환산 300 / 실기 700</div>
+    </div>
+  </button>
+</form>
+        """
+        st.markdown(html_s, unsafe_allow_html=True)
 
 def page_converted_score_input():
     """3단계: 환산점수 입력"""
