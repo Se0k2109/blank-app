@@ -104,8 +104,8 @@ DISPLAY_NAMES = {
 # 대학 로고(로컬 경로 또는 원격 URL). 기본값은 비어있음 — 원하는 URL 또는 이미지 파일 경로로 바꿔주세요.
 # 예시: DISPLAY_LOGOS['가천대학교'] = 'https://example.com/gachon_logo.png'
 DISPLAY_LOGOS = {
-    "가천대학교": "https://admission.gachon.ac.kr/admission/images/common/gachon_logo.png",
-    "상명대학교": "https://postfiles.pstatic.net/MjAyMTA4MzBfMTQg/MDAxNjMwMzI4OTI4Njc4.y6HaMJ5q1xtGS3wum5TLPjlWgoLDFqX8tUFEs6JENrAg.cCWgm1Q0_X_-X3QXQ_VO_8kwzJc3omd8gu2A29DQYC0g.PNG.parkpear37/image.png?type=w966"
+    "가천대학교": "https://z-one.kr/_next/image?url=%2Fimages%2Funiversity%2F%EA%B0%80%EC%B2%9C%EB%8C%80%ED%95%99%EA%B5%90.webp&w=64&q=75",
+    "상명대학교": "https://z-one.kr/_next/image?url=%2Fimages%2Funiversity%2F%EC%83%81%EB%AA%85%EB%8C%80%ED%95%99%EA%B5%90.webp&w=64&q=75"
 }
 
 # 상명대학교 추가 (스포츠건강관리전공)
