@@ -1,10 +1,8 @@
 import streamlit as st
 import math
 
-# 페이지 설정
 st.set_page_config(page_title="체력시험 합격 판정 시스템", layout="wide")
 
-# 세션 상태 초기화
 if 'page' not in st.session_state:
     st.session_state.page = "university_select"
 if 'gender' not in st.session_state:
@@ -16,7 +14,6 @@ if 'naesin_score' not in st.session_state:
 if 'practical_scores' not in st.session_state:
     st.session_state.practical_scores = {}
 
-# 대학별 기준 데이터
 UNIVERSITY_STANDARDS = {
     "가천대학교": {
         "naesin_max": 300,
@@ -50,28 +47,23 @@ UNIVERSITY_STANDARDS = {
     }
 }
 
-# 표시용 이름 및 로고
 DISPLAY_NAMES = {"가천대학교": "가천대학교 체육학부", "상명대학교": "상명대학교 스포츠건강관리전공"}
 DISPLAY_LOGOS = {
     "가천대학교": "https://z-one.kr/_next/image?url=%2Fimages%2Funiversity%2F%EA%B0%80%EC%B2%9C%EB%8C%80%ED%95%99%EA%B5%90.webp&w=64&q=75",
     "상명대학교": "https://z-one.kr/_next/image?url=%2Fimages%2Funiversity%2F%EC%83%81%EB%AA%85%EB%8C%80%ED%95%99%EA%B5%90.webp&w=64&q=75"
 }
 
-
 def calculate_practical_score(event_name, performance, university="가천대학교", gender="남자"):
     gender_key = "male" if gender == "남자" else "female"
     standards = UNIVERSITY_STANDARDS[university][gender_key][event_name]
-
     standard = standards["standard"]
     max_score = standards["max_score"]
     is_decreasing = standards["decreasing"]
     per_grade = standards["per_grade"]
-
     if is_decreasing:
         difference = standard - performance
     else:
         difference = performance - standard
-
     if difference >= 0:
         score = max_score
     else:
@@ -79,17 +71,13 @@ def calculate_practical_score(event_name, performance, university="가천대학�
         score_per_grade = standards.get("score_per_grade", 8.75)
         score = max_score - (grades_down * score_per_grade)
         score = max(0, score)
-
     return score
-
 
 def page_university_select():
     st.title("체력시험 합격 판정 시스템")
     st.subheader("1단계: 대학교 선택")
     st.write("아래에서 대학교를 선택하여 진행하세요.")
-
     st.divider()
-
     params = st.experimental_get_query_params()
     if 'select' in params:
         sel = params.get('select')[0]
@@ -100,38 +88,31 @@ def page_university_select():
             st.session_state.page = "gender_select"
             st.experimental_set_query_params()
             st.rerun()
-
     col1, col2 = st.columns(2)
     with col1:
         logo_g = DISPLAY_LOGOS.get('가천대학교', '')
-        html_g = f"""
-<form method='get'>
-  <button name='select' value='가천대학교' style='display:flex; align-items:center; gap:12px; width:100%; padding:14px; border-radius:10px; border:1px solid #d0e8d8; background:linear-gradient(180deg,#ffffff,#f6fff7); font-size:16px; cursor:pointer;'>
-    <img src='{logo_g}' style='width:56px; height:56px; object-fit:contain;'/>
-    <div style='text-align:left;'>
-      <div style='font-weight:600;'>가천대학교 체육학부</div>
-      <div style='font-size:13px; color:#444;'>내신 300 / 실기 700</div>
-    </div>
-  </button>
-</form>
-        """
+        html_g = f"""<form method='get'>
+<button name='select' value='가천대학교' style='display:flex; align-items:center; gap:12px; width:100%; padding:14px; border-radius:10px; border:1px solid #d0e8d8; background:linear-gradient(180deg,#ffffff,#f6fff7); font-size:16px; cursor:pointer;'>
+<img src='{logo_g}' style='width:56px; height:56px; object-fit:contain;'/>
+<div style='text-align:left;'>
+<div style='font-weight:600;'>가천대학교 체육학부</div>
+<div style='font-size:13px; color:#444;'>내신 300 / 실기 700</div>
+</div>
+</button>
+</form>"""
         st.markdown(html_g, unsafe_allow_html=True)
-
     with col2:
         logo_s = DISPLAY_LOGOS.get('상명대학교', '')
-        html_s = f"""
-<form method='get'>
-  <button name='select' value='상명대학교' style='display:flex; align-items:center; gap:12px; width:100%; padding:14px; border-radius:10px; border:1px solid #d6e9ff; background:linear-gradient(180deg,#ffffff,#f6faff); font-size:16px; cursor:pointer;'>
-    <img src='{logo_s}' style='width:56px; height:56px; object-fit:contain;'/>
-    <div style='text-align:left;'>
-      <div style='font-weight:600;'>상명대학교 스포츠건강관리</div>
-      <div style='font-size:13px; color:#444;'>내신 300 / 실기 700</div>
-    </div>
-  </button>
-</form>
-        """
+        html_s = f"""<form method='get'>
+<button name='select' value='상명대학교' style='display:flex; align-items:center; gap:12px; width:100%; padding:14px; border-radius:10px; border:1px solid #d6e9ff; background:linear-gradient(180deg,#ffffff,#f6faff); font-size:16px; cursor:pointer;'>
+<img src='{logo_s}' style='width:56px; height:56px; object-fit:contain;'/>
+<div style='text-align:left;'>
+<div style='font-weight:600;'>상명대학교 스포츠건강관리</div>
+<div style='font-size:13px; color:#444;'>내신 300 / 실기 700</div>
+</div>
+</button>
+</form>"""
         st.markdown(html_s, unsafe_allow_html=True)
-
 
 def page_gender_select():
     st.title("체력시험 합격 판정 시스템")
@@ -147,7 +128,169 @@ def page_gender_select():
         st.session_state.page = "naesin_score_input"
         st.rerun()
 
-
 def page_naesin_score_input():
     st.title("체력시험 합격 판정 시스템")
     st.subheader("3단계: 내신점수 입력")
+    university = st.session_state.selected_university
+    max_naesin = UNIVERSITY_STANDARDS[university]["naesin_max"]
+    display_uni = DISPLAY_NAMES.get(university, university)
+    col1, col2 = st.columns(2)
+    with col1:
+        st.metric("선택된 대학교", display_uni)
+    with col2:
+        st.metric("내신점수 만점", f"{max_naesin}점")
+    st.write("**기준은 만점 기준입니다.**")
+    st.divider()
+    col1, col2 = st.columns([1, 1])
+    with col1:
+        naesin_score = st.number_input("내신점수를 입력하세요:", value=0, step=1, key="naesin_input")
+    with col2:
+        st.metric("입력된 내신점수", f"{naesin_score}점")
+    st.divider()
+    col1, col2 = st.columns([1, 1])
+    with col1:
+        if st.button("◀ 이전 단계로", use_container_width=True):
+            st.session_state.page = "university_select"
+            st.rerun()
+    with col2:
+        if st.button("다음: 실기 성적입력 ▶", use_container_width=True):
+            st.session_state.naesin_score = naesin_score
+            st.session_state.page = "practical_score_input"
+            st.rerun()
+
+def page_practical_score_input():
+    st.title("체력시험 합격 판정 시스템")
+    st.subheader("4단계: 실기 종목별 성적 입력")
+    university = st.session_state.selected_university
+    gender = st.session_state.gender
+    naesin_score = st.session_state.naesin_score
+    gender_key = "male" if gender == "남자" else "female"
+    events = UNIVERSITY_STANDARDS[university][gender_key]
+    for event_name in events.keys():
+        if event_name not in st.session_state.practical_scores:
+            st.session_state.practical_scores[event_name] = None
+    display_uni = DISPLAY_NAMES.get(university, university)
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.metric("대학교", display_uni)
+    with col2:
+        st.metric("성별", gender)
+    with col3:
+        st.metric("내신점수", f"{naesin_score}점")
+    st.divider()
+    st.write("**📌 입력 기준:** 기준은 만점 기준이며, 각 종목의 1등급당 점수는 표에서 확인하세요.")
+    st.divider()
+    st.write("#### 📊 실기 종목 성적 입력")
+    col_header1, col_header2, col_header3, col_header4, col_header5 = st.columns([2.5, 1.2, 1, 2.2, 1.3])
+    with col_header1:
+        st.write("**종목명**")
+    with col_header2:
+        st.write("**기준(만점)**")
+    with col_header3:
+        st.write("**단위**")
+    with col_header4:
+        st.write("**등급 단위 (1등급당 점수)**")
+    with col_header5:
+        st.write("**성적입력**")
+    st.divider()
+    for idx, (event_name, standards) in enumerate(events.items()):
+        col1, col2, col3, col4, col5 = st.columns([2.5, 1.2, 1, 2.2, 1.3])
+        with col1:
+            st.write(f"**{event_name}**")
+        with col2:
+            st.write(f"{standards['standard']}")
+        with col3:
+            st.write(f"{standards['unit']}")
+        with col4:
+            score_per_grade = standards.get('score_per_grade', 8.75)
+            unit_per_grade = standards.get('per_grade')
+            st.write(f"1등급 = {score_per_grade}점 / {unit_per_grade}{standards['unit']}")
+        with col5:
+            performance = st.number_input(
+                f"성적 입력",
+                value=float(st.session_state.practical_scores[event_name]) if st.session_state.practical_scores[event_name] is not None else 0.0,
+                step=0.1,
+                key=f"input_{event_name}",
+                label_visibility="collapsed"
+            )
+            st.session_state.practical_scores[event_name] = performance
+    st.divider()
+    col1, col2 = st.columns([1, 1])
+    with col1:
+        if st.button("◀ 이전 단계로", use_container_width=True):
+            st.session_state.page = "naesin_score_input"
+            st.rerun()
+    with col2:
+        if st.button("다음: 최종 결과 보기 ▶", use_container_width=True):
+            st.session_state.page = "result"
+            st.rerun()
+
+def page_result():
+    st.title("🏫 체력시험 합격 판정 결과")
+    st.subheader("4단계: 최종 결과")
+    university = st.session_state.selected_university
+    gender = st.session_state.gender
+    naesin_score = st.session_state.get('naesin_score', 0)
+    practical_scores = st.session_state.practical_scores
+    gender_key = "male" if gender == "남자" else "female"
+    events = UNIVERSITY_STANDARDS[university][gender_key]
+    total_practical_score = 0
+    practical_rows = []
+    for event_name, perf in practical_scores.items():
+        perf_val = perf if (perf is not None) else 0.0
+        score = calculate_practical_score(event_name, perf_val, university, gender)
+        total_practical_score += score
+        practical_rows.append({"종목": event_name, "성적": perf if perf is not None else "미입력", "획득점수": round(score, 2)})
+    total_score = naesin_score + total_practical_score
+    naesin_max = UNIVERSITY_STANDARDS[university]["naesin_max"]
+    practical_max = UNIVERSITY_STANDARDS[university]["practical_max"]
+    max_total = naesin_max + practical_max
+    m1, m2, m3, m4 = st.columns([2, 2, 2, 2])
+    with m1:
+        st.metric("대학교", DISPLAY_NAMES.get(university, university))
+    with m2:
+        st.metric("내신점수", f"{naesin_score} / {naesin_max}")
+    with m3:
+        st.metric("실기총점", f"{total_practical_score:.2f} / {practical_max}")
+    with m4:
+        st.metric("합계", f"{total_score:.2f} / {max_total}")
+    st.divider()
+    if total_score >= 900:
+        st.success("🎉 합격유력", help="900점 이상: 합격유력")
+    elif total_score >= 895:
+        st.info("👍 합격긍정", help="895~899점: 합격긍정")
+    else:
+        st.error("🚫 불합격권(지원권고 아님)", help="894점 이하: 합격 어렵습니다")
+    with st.expander("세부 항목 보기 (실기 종목별 점수)"):
+        if practical_rows:
+            import pandas as pd
+            df = pd.DataFrame(practical_rows)
+            df = df[["종목", "성적", "획득점수"]]
+            st.table(df)
+        else:
+            st.write("실기 입력 값이 없습니다.")
+    st.divider()
+    c1, c2 = st.columns([1, 1])
+    with c1:
+        if st.button("◀ 이전 단계로", use_container_width=True):
+            st.session_state.page = "practical_score_input"
+            st.rerun()
+    with c2:
+        if st.button("🔄 처음부터 다시 시작", use_container_width=True):
+            st.session_state.page = "university_select"
+            st.session_state.gender = None
+            st.session_state.selected_university = None
+            st.session_state.naesin_score = None
+            st.session_state.practical_scores = {}
+            st.rerun()
+
+if st.session_state.page == "university_select":
+    page_university_select()
+elif st.session_state.page == "gender_select":
+    page_gender_select()
+elif st.session_state.page == "naesin_score_input":
+    page_naesin_score_input()
+elif st.session_state.page == "practical_score_input":
+    page_practical_score_input()
+elif st.session_state.page == "result":
+    page_result()
