@@ -396,7 +396,7 @@ def page_practical_score_input():
     
     with col1:
         if st.button("◀ 이전 단계로", use_container_width=True):
-            st.session_state.page = "converted_score_input"
+            st.session_state.page = "naesin_score_input"
             st.rerun()
     
     with col2:
@@ -411,7 +411,8 @@ def page_result():
     
     university = st.session_state.selected_university
     gender = st.session_state.gender
-    converted_score = st.session_state.converted_score
+    # 내신 점수(세션에 저장된 `naesin_score`)를 사용
+    converted_score = st.session_state.get('naesin_score', 0)
     practical_scores = st.session_state.practical_scores
     gender_key = "male" if gender == "남자" else "female"
     events = UNIVERSITY_STANDARDS[university][gender_key]
@@ -426,7 +427,7 @@ def page_result():
     st.divider()
     
     st.write("### 📊 환산점수")
-    st.metric("환산점수", f"{converted_score}점 / {UNIVERSITY_STANDARDS[university]['converted_max']}점")
+    st.metric("내신점수", f"{converted_score}점 / {UNIVERSITY_STANDARDS[university]['naesin_max']}점")
     
     st.divider()
     
@@ -473,12 +474,12 @@ def page_result():
     
     st.write("### 📋 최종 결과")
     total_score = converted_score + total_practical_score
-    max_total_score = UNIVERSITY_STANDARDS[university]["converted_max"] + UNIVERSITY_STANDARDS[university]["practical_max"]
+    max_total_score = UNIVERSITY_STANDARDS[university]["naesin_max"] + UNIVERSITY_STANDARDS[university]["practical_max"]
     
     col1, col2, col3 = st.columns([1, 1, 1])
     
     with col1:
-        st.metric("환산점수", f"{converted_score}점")
+        st.metric("내신점수", f"{converted_score}점")
     with col2:
         st.metric("실기총점", f"{total_practical_score:.2f}점")
     with col3:
