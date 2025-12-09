@@ -231,46 +231,48 @@ def page_university_select():
 
     # 가천대학교 카드 (왼쪽)
     with left_col.container():
-        st.markdown("<div style='text-align: center; padding: 10px; border: 1px solid #eee; border-radius:8px;'>", unsafe_allow_html=True)
-        # 로고가 있으면 표시
+        col_btn1, col_btn1_spacer = st.columns([1, 0.2])
+        with col_btn1:
+            if st.button("", use_container_width=True, key="gachon_select"):
+                st.session_state.selected_university = "가천대학교"
+                st.session_state.practical_scores = {}
+                st.session_state.converted_score = 0
+                st.session_state.page = "converted_score_input"
+                st.rerun()
+        
+        # 버튼 내 콘텐츠를 컨테이너로 표시
+        st.markdown("<div style='text-align: center; padding: 15px; border: 2px solid #ddd; border-radius:8px; background-color: #f9f9f9;'>", unsafe_allow_html=True)
         logo_g = DISPLAY_LOGOS.get('가천대학교')
         if logo_g:
             try:
-                st.image(logo_g, width=140)
+                st.image(logo_g, width=80)
             except Exception:
                 st.write("")
-        st.markdown("## 🏫 가천대학교 체육학부")
-        st.markdown("**Gachon University - 체육학부**", unsafe_allow_html=True)
-        st.markdown("---")
-        st.caption("환산점수 300 / 실기 700 (가천대학교 기준)")
+        st.markdown("### 🏫 가천대학교 체육학부")
+        st.write("환산점수 300 / 실기 700")
         st.markdown("</div>", unsafe_allow_html=True)
-        if st.button("✅ 선택: 가천대학교 체육학부", use_container_width=True, key="gachon_select"):
-            st.session_state.selected_university = "가천대학교"
-            st.session_state.practical_scores = {}
-            st.session_state.converted_score = 0
-            st.session_state.page = "converted_score_input"
-            st.rerun()
 
     # 상명대학교 카드 (오른쪽)
     with right_col.container():
-        st.markdown("<div style='text-align: center; padding: 10px; border: 1px solid #eee; border-radius:8px;'>", unsafe_allow_html=True)
+        col_btn2, col_btn2_spacer = st.columns([1, 0.2])
+        with col_btn2:
+            if st.button("", use_container_width=True, key="sangmyung_select"):
+                st.session_state.selected_university = "상명대학교"
+                st.session_state.practical_scores = {}
+                st.session_state.converted_score = 0
+                st.session_state.page = "converted_score_input"
+                st.rerun()
+        
+        st.markdown("<div style='text-align: center; padding: 15px; border: 2px solid #ddd; border-radius:8px; background-color: #f9f9f9;'>", unsafe_allow_html=True)
         logo_s = DISPLAY_LOGOS.get('상명대학교')
         if logo_s:
             try:
-                st.image(logo_s, width=140)
+                st.image(logo_s, width=80)
             except Exception:
                 st.write("")
-        st.markdown("## 🏫 상명대학교 스포츠건강관리전공")
-        st.markdown("**Sangmyung University - 스포츠건강관리전공**", unsafe_allow_html=True)
-        st.markdown("---")
-        st.caption("환산점수 300 / 실기 700 (상명대학교 기준)")
+        st.markdown("### 🏫 상명대학교 스포츠건강관리전공")
+        st.write("환산점수 300 / 실기 700")
         st.markdown("</div>", unsafe_allow_html=True)
-        if st.button("✅ 선택: 상명대학교 스포츠건강관리전공", use_container_width=True, key="sangmyung_select"):
-            st.session_state.selected_university = "상명대학교"
-            st.session_state.practical_scores = {}
-            st.session_state.converted_score = 0
-            st.session_state.page = "converted_score_input"
-            st.rerun()
 
 def page_converted_score_input():
     """3단계: 환산점수 입력"""
