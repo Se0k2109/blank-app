@@ -5,152 +5,76 @@ import math
 st.set_page_config(page_title="가천대학교 체력시험 합격 판정 시스템", layout="wide")
 
 # 세션 상태 초기화
-if 'page' not in st.session_state:
-    st.session_state.page = "university_select"
-if 'gender' not in st.session_state:
-    st.session_state.gender = None
-if 'selected_university' not in st.session_state:
-    st.session_state.selected_university = None
-if 'naesin_score' not in st.session_state:
-    st.session_state.naesin_score = None
-if 'practical_scores' not in st.session_state:
-    st.session_state.practical_scores = {}
+    """4단계: 최종 결과 (간단 · 명료)"""
+    st.title("🏫 체력시험 합격 판정 결과")
+    st.subheader("4단계: 최종 결과")
 
-# 가천대학교 기준 정보 (성별별로 구분)
-UNIVERSITY_STANDARDS = {
-    "가천대학교": {
-        "naesin_max": 300,
-        "practical_max": 700,
-        "male": {
-                "배근력검사": {
-                    "standard": 221,
-                    "max_score": 175,
-                    "unit": "kg",
-                    "decreasing": False,
-                    "per_grade": 5,
-                    "score_per_grade": 8.75
-                },
-            "10m왕복달리기": {
-                "standard": 8.00,
-                "max_score": 175,
-                "unit": "초",
-                "decreasing": True,
-                "per_grade": 0.1
-            },
-            "제자리멀리뛰기": {
-                "standard": 300,
-                "max_score": 175,
-                "unit": "cm",
-                "decreasing": False,
-                "per_grade": 5,
-                "score_per_grade": 8.75
-            },
-            "메디신볼던지기": {
-                "standard": 12.5,
-                "max_score": 175,
-                "unit": "m",
-                "decreasing": False,
-                "per_grade": 0.2,
-                "score_per_grade": 8.75
-            }
-        },
-        "female": {
-                "배근력검사": {
-                    "standard": 161,
-                    "max_score": 175,
-                    "unit": "kg",
-                    "decreasing": False,
-                    "per_grade": 5,
-                    "score_per_grade": 8.75
-                },
-            "10m왕복달리기": {
-                "standard": 9.20,
-                "max_score": 175,
-                "unit": "초",
-                "decreasing": True,
-                "per_grade": 0.1
-            },
-            "제자리멀리뛰기": {
-                "standard": 240,
-                "max_score": 175,
-                "unit": "cm",
-                "decreasing": False,
-                "per_grade": 5,
-                "score_per_grade": 8.75
-            },
-            "메디신볼던지기": {
-                "standard": 9.8,
-                "max_score": 175,
-                "unit": "m",
-                "decreasing": False,
-                "per_grade": 0.2,
-                "score_per_grade": 8.75
-            }
-        }
-    }
-}
+    university = st.session_state.selected_university
+    gender = st.session_state.gender
+    naesin_score = st.session_state.get('naesin_score', 0)
+    practical_scores = st.session_state.practical_scores
+    gender_key = "male" if gender == "남자" else "female"
+    events = UNIVERSITY_STANDARDS[university][gender_key]
 
-# 화면에 표시할 대학 명칭 매핑
-DISPLAY_NAMES = {
-    "가천대학교": "가천대학교 체육학부",
-    "상명대학교": "상명대학교 스포츠건강관리전공"
-}
+    # 실기 총점 계산
+    total_practical_score = 0
+    practical_rows = []
+    for event_name, perf in practical_scores.items():
+        perf_val = perf if (perf is not None) else 0.0
+        score = calculate_practical_score(event_name, perf_val, university, gender)
+        total_practical_score += score
+        practical_rows.append({"종목": event_name, "성적": perf if perf is not None else "미입력", "획득점수": round(score, 2)})
 
-# 대학 로고(로컬 경로 또는 원격 URL). 기본값은 비어있음 — 원하는 URL 또는 이미지 파일 경로로 바꿔주세요.
-# 예시: DISPLAY_LOGOS['가천대학교'] = 'https://example.com/gachon_logo.png'
-DISPLAY_LOGOS = {
-    "가천대학교": "https://z-one.kr/_next/image?url=%2Fimages%2Funiversity%2F%EA%B0%80%EC%B2%9C%EB%8C%80%ED%95%99%EA%B5%90.webp&w=64&q=75",
-    "상명대학교": "https://z-one.kr/_next/image?url=%2Fimages%2Funiversity%2F%EC%83%81%EB%AA%85%EB%8C%80%ED%95%99%EA%B5%90.webp&w=64&q=75"
-}
+    total_score = naesin_score + total_practical_score
+    naesin_max = UNIVERSITY_STANDARDS[university]["naesin_max"]
+    practical_max = UNIVERSITY_STANDARDS[university]["practical_max"]
+    max_total = naesin_max + practical_max
 
-# 상명대학교 추가 (스포츠건강관리전공)
-UNIVERSITY_STANDARDS["상명대학교"] = {
-    "naesin_max": 300,
-    "practical_max": 700,
-    "male": {
-        "제자리멀리뛰기": {
-            "standard": 305,
-            "max_score": 245,
-            "unit": "cm",
-            "decreasing": False,
-            "per_grade": 3,
-            "score_per_grade": 17.5
-        },
-        "메디신볼던지기": {
-            "standard": 12.7,
-            "max_score": 210,
-            "unit": "m",
-            "decreasing": False,
-            "per_grade": 0.2,
-            "score_per_grade": 15
-        },
-        "20m왕복달리기": {
-            "standard": 15.0,
-            "max_score": 245,
-            "unit": "초",
-            "decreasing": True,
-            "per_grade": 0.2,
-            "score_per_grade": 17.5
-        }
-    },
-    "female": {
-        "제자리멀리뛰기": {
-            "standard": 250,
-            "max_score": 245,
-            "unit": "cm",
-            "decreasing": False,
-            "per_grade": 3,
-            "score_per_grade": 17.5
-        },
-        "메디신볼던지기": {
-            "standard": 10.4,
-            "max_score": 210,
-            "unit": "m",
-            "decreasing": False,
-            "per_grade": 0.2,
-            "score_per_grade": 15
-        },
-        "20m왕복달리기": {
+    # 핵심 메트릭을 한 줄에 표시
+    m1, m2, m3, m4 = st.columns([2, 2, 2, 2])
+    with m1:
+        st.metric("대학교", DISPLAY_NAMES.get(university, university))
+    with m2:
+        st.metric("내신점수", f"{naesin_score} / {naesin_max}")
+    with m3:
+        st.metric("실기총점", f"{total_practical_score:.2f} / {practical_max}")
+    with m4:
+        st.metric("합계", f"{total_score:.2f} / {max_total}")
+
+    st.divider()
+
+    # 간단 판정 배지
+    if total_score >= 900:
+        st.success("🎉 합격유력", help="900점 이상: 합격유력")
+    elif total_score >= 895:
+        st.info("👍 합격긍정", help="895~899점: 합격긍정")
+    else:
+        st.error("🚫 불합격권(지원권고 아님)", help="894점 이하: 합격 어렵습니다")
+
+    # 세부 보기(필요 시 확장)
+    with st.expander("세부 항목 보기 (실기 종목별 점수)"):
+        if practical_rows:
+            import pandas as pd
+            df = pd.DataFrame(practical_rows)
+            df = df[["종목", "성적", "획득점수"]]
+            st.table(df)
+        else:
+            st.write("실기 입력 값이 없습니다.")
+
+    st.divider()
+    c1, c2 = st.columns([1, 1])
+    with c1:
+        if st.button("◀ 이전 단계로", use_container_width=True):
+            st.session_state.page = "practical_score_input"
+            st.rerun()
+    with c2:
+        if st.button("🔄 처음부터 다시 시작", use_container_width=True):
+            st.session_state.page = "university_select"
+            st.session_state.gender = None
+            st.session_state.selected_university = None
+            st.session_state.naesin_score = None
+            st.session_state.practical_scores = {}
+            st.rerun()
             "standard": 16.4,
             "max_score": 245,
             "unit": "초",
@@ -216,7 +140,7 @@ def page_gender_select():
 def page_university_select():
     """2단계: 대학교 선택"""
     st.title("체력시험 합격 판정 시스템")
-    st.subheader("2단계: 대학교 선택")
+    st.subheader("1단계: 대학교 선택")
 
     st.write("아래에서 대학교를 선택하여 진행하세요.")
     st.divider()
