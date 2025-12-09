@@ -78,7 +78,7 @@ def page_university_select():
     st.subheader("1단계: 대학교 선택")
     st.write("아래에서 대학교를 선택하여 진행하세요.")
     st.divider()
-    params = st.experimental_get_query_params()
+    params = st.query_params
     if 'select' in params:
         sel = params.get('select')[0]
         if sel in UNIVERSITY_STANDARDS:
@@ -86,7 +86,7 @@ def page_university_select():
             st.session_state.practical_scores = {}
             st.session_state.naesin_score = 0
             st.session_state.page = "gender_select"
-            st.experimental_set_query_params()
+            st.query_params.clear()
             st.rerun()
     col1, col2 = st.columns(2)
     with col1:
@@ -256,11 +256,11 @@ def page_result():
         st.metric("합계", f"{total_score:.2f} / {max_total}")
     st.divider()
     if total_score >= 900:
-        st.success("🎉 합격유력", help="900점 이상: 합격유력")
+        st.success("🎉 합격유력 (900점 이상)")
     elif total_score >= 895:
-        st.info("👍 합격긍정", help="895~899점: 합격긍정")
+        st.info("👍 합격긍정 (895~899점)")
     else:
-        st.error("🚫 불합격권(지원권고 아님)", help="894점 이하: 합격 어렵습니다")
+        st.error("🚫 불합격권 (894점 이하)")
     with st.expander("세부 항목 보기 (실기 종목별 점수)"):
         if practical_rows:
             import pandas as pd
