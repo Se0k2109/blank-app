@@ -6,13 +6,13 @@ st.set_page_config(page_title="가천대학교 체력시험 합격 판정 시스
 
 # 세션 상태 초기화
 if 'page' not in st.session_state:
-    st.session_state.page = "gender_select"
+    st.session_state.page = "university_select"
 if 'gender' not in st.session_state:
     st.session_state.gender = None
 if 'selected_university' not in st.session_state:
     st.session_state.selected_university = None
-if 'converted_score' not in st.session_state:
-    st.session_state.converted_score = None
+if 'naesin_score' not in st.session_state:
+    st.session_state.naesin_score = None
 if 'practical_scores' not in st.session_state:
     st.session_state.practical_scores = {
         "배근력검사": None,
@@ -24,7 +24,7 @@ if 'practical_scores' not in st.session_state:
 # 가천대학교 기준 정보 (성별별로 구분)
 UNIVERSITY_STANDARDS = {
     "가천대학교": {
-        "converted_max": 300,
+        "naesin_max": 300,
         "practical_max": 700,
         "male": {
                 "배근력검사": {
@@ -110,7 +110,7 @@ DISPLAY_LOGOS = {
 
 # 상명대학교 추가 (스포츠건강관리전공)
 UNIVERSITY_STANDARDS["상명대학교"] = {
-    "converted_max": 300,
+    "naesin_max": 300,
     "practical_max": 700,
     "male": {
         "제자리멀리뛰기": {
@@ -194,9 +194,9 @@ def calculate_practical_score(event_name, performance, university="가천대학�
     return score
 
 def page_gender_select():
-    """1단계: 성별 선택"""
-    st.title("🎫 체력시험 합격 판정 시스템")
-    st.subheader("1단계: 성별 선택")
+    """2단계: 성별 선택"""
+    st.title("체력시험 합격 판정 시스템")
+    st.subheader("2단계: 성별 선택")
     
     st.write("시험을 응시할 성별을 선택하세요. (성별에 따라 기준이 다릅니다)")
     st.divider()
@@ -213,9 +213,9 @@ def page_gender_select():
     
     st.divider()
     
-    if st.button("다음: 대학교 선택 ▶", use_container_width=True):
+    if st.button("다음: 내신점수 입력 ▶", use_container_width=True):
         st.session_state.gender = selected
-        st.session_state.page = "university_select"
+        st.session_state.page = "naesin_score_input"
         st.rerun()
 
 def page_university_select():
@@ -234,8 +234,8 @@ def page_university_select():
         if sel in UNIVERSITY_STANDARDS:
             st.session_state.selected_university = sel
             st.session_state.practical_scores = {}
-            st.session_state.converted_score = 0
-            st.session_state.page = "converted_score_input"
+            st.session_state.naesin_score = 0
+            st.session_state.page = "gender_select"
             # 쿼리 파라미터 초기화
             st.experimental_set_query_params()
             st.rerun()
@@ -274,20 +274,20 @@ def page_university_select():
         """
         st.markdown(html_s, unsafe_allow_html=True)
 
-def page_converted_score_input():
-    """3단계: 환산점수 입력"""
-    st.title("🏫 체력시험 합격 판정 시스템")
-    st.subheader("3단계: 환산점수 입력")
+def page_naesin_score_input():
+    """3단계: 내신점수 입력"""
+    st.title("체력시험 합격 판정 시스템")
+    st.subheader("3단계: 내신점수 입력")
     
     university = st.session_state.selected_university
-    max_converted = UNIVERSITY_STANDARDS[university]["converted_max"]
+    max_naesin = UNIVERSITY_STANDARDS[university]["naesin_max"]
     
     display_uni = DISPLAY_NAMES.get(university, university)
     col1, col2 = st.columns(2)
     with col1:
         st.metric("선택된 대학교", display_uni)
     with col2:
-        st.metric("환산점수 만점", f"{max_converted}점")
+        st.metric("내신점수 만점", f"{max_naesin}점")
     
     st.write("**기준은 만점 기준입니다.**")
     st.divider()
@@ -295,15 +295,15 @@ def page_converted_score_input():
     col1, col2 = st.columns([1, 1])
     
     with col1:
-        converted_score = st.number_input(
-            f"환산점수를 입력하세요:",
+        naesin_score = st.number_input(
+            f"내신점수를 입력하세요:",
             value=0,
             step=1,
-            key="converted_input"
+            key="naesin_input"
         )
     
     with col2:
-        st.metric("입력된 환산점수", f"{converted_score}점")
+        st.metric("입력된 내신점수", f"{naesin_score}점")
     
     st.divider()
     col1, col2 = st.columns([1, 1])
@@ -314,8 +314,8 @@ def page_converted_score_input():
             st.rerun()
     
     with col2:
-        if st.button("다음: 성적입력 ▶", use_container_width=True):
-            st.session_state.converted_score = converted_score
+        if st.button("다음: 실기 성적입력 ▶", use_container_width=True):
+            st.session_state.naesin_score = naesin_score
             st.session_state.page = "practical_score_input"
             st.rerun()
 
@@ -326,7 +326,7 @@ def page_practical_score_input():
     
     university = st.session_state.selected_university
     gender = st.session_state.gender
-    converted_score = st.session_state.converted_score
+    naesin_score = st.session_state.naesin_score
     gender_key = "male" if gender == "남자" else "female"
     events = UNIVERSITY_STANDARDS[university][gender_key]
     
@@ -338,7 +338,7 @@ def page_practical_score_input():
     with col2:
         st.metric("성별", gender)
     with col3:
-        st.metric("환산점수", f"{converted_score}점")
+        st.metric("내신점수", f"{naesin_score}점")
     
     st.divider()
     st.write("**📌 입력 기준:** 기준은 만점 기준이며, 각 종목의 1등급당 점수는 표에서 확인하세요.")
@@ -548,17 +548,17 @@ def page_result():
             st.session_state.page = "gender_select"
             st.session_state.gender = None
             st.session_state.selected_university = None
-            st.session_state.converted_score = None
+            st.session_state.naesin_score = None
             st.session_state.practical_scores = {}
             st.rerun()
 
 # 페이지 라우팅
-if st.session_state.page == "gender_select":
-    page_gender_select()
-elif st.session_state.page == "university_select":
+if st.session_state.page == "university_select":
     page_university_select()
-elif st.session_state.page == "converted_score_input":
-    page_converted_score_input()
+elif st.session_state.page == "gender_select":
+    page_gender_select()
+elif st.session_state.page == "naesin_score_input":
+    page_naesin_score_input()
 elif st.session_state.page == "practical_score_input":
     page_practical_score_input()
 elif st.session_state.page == "result":
