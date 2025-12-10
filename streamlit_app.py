@@ -227,7 +227,7 @@ def page_result():
         perf_val = perf if (perf is not None) else 0.0
         score = calculate_practical_score(event_name, perf_val, university, gender)
         total_practical_score += score
-        practical_rows.append({"종목": event_name, "성적": perf if perf is not None else "미입력", "획득점수": round(score, 2)})
+        practical_rows.append({"종목": event_name, "실기 기록": perf if perf is not None else "미입력", "획득점수": round(score, 2)})
     total_score = naesin_score + total_practical_score
     naesin_max = UNIVERSITY_STANDARDS[university]["naesin_max"]
     practical_max = UNIVERSITY_STANDARDS[university]["practical_max"]
@@ -252,7 +252,7 @@ def page_result():
         if practical_rows:
             import pandas as pd
             df = pd.DataFrame(practical_rows)
-            df = df[["종목", "성적", "획득점수"]]
+            df = df[["종목", "실기 기록", "획득점수"]]
             st.table(df)
         else:
             st.write("실기 입력 값이 없습니다.")
