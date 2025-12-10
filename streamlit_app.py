@@ -112,10 +112,7 @@ def page_gender_select():
     st.title("체력시험 합격 판정 시스템")
     st.subheader("2단계: 성별 선택")
     st.write("시험을 응시할 성별을 선택하세요. (성별에 따라 기준이 다릅니다)")
-    st.divider()
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
-        selected = st.radio("성별 선택:", ["남자", "여자"], horizontal=True, label_visibility="collapsed")
+    selected = st.radio("성별 선택:", ["남자", "여자"], horizontal=True)
     st.divider()
     if st.button("다음: 내신점수 입력 ▶", use_container_width=True):
         st.session_state.gender = selected
