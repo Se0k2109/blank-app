@@ -175,31 +175,27 @@ def page_practical_score_input():
     st.write("**📌 입력 기준:** 기준은 만점 기준이며, 각 종목의 1등급당 점수는 표에서 확인하세요.")
     st.divider()
     st.write("#### 📊 실기 종목 성적 입력")
-    col_header1, col_header2, col_header3, col_header4, col_header5 = st.columns([2.5, 1.2, 1, 2.2, 1.3])
+    col_header1, col_header2, col_header3, col_header4 = st.columns([2.5, 2, 2, 1.3])
     with col_header1:
         st.write("**종목명**")
     with col_header2:
         st.write("**기준(만점)**")
     with col_header3:
-        st.write("**단위**")
+        st.write("**급간당 점수**")
     with col_header4:
-        st.write("**등급 단위 (1등급당 점수)**")
-    with col_header5:
         st.write("**성적입력**")
     st.divider()
     for idx, (event_name, standards) in enumerate(events.items()):
-        col1, col2, col3, col4, col5 = st.columns([2.5, 1.2, 1, 2.2, 1.3])
+        col1, col2, col3, col4 = st.columns([2.5, 2, 2, 1.3])
         with col1:
             st.write(f"**{event_name}**")
         with col2:
-            st.write(f"{standards['standard']}")
+            st.write(f"{standards['standard']}{standards['unit']}")
         with col3:
-            st.write(f"{standards['unit']}")
-        with col4:
             score_per_grade = standards.get('score_per_grade', 8.75)
             unit_per_grade = standards.get('per_grade')
-            st.write(f"1등급 = {score_per_grade}점 / {unit_per_grade}{standards['unit']}")
-        with col5:
+            st.write(f"{score_per_grade}점 / {unit_per_grade}{standards['unit']}")
+        with col4:
             performance = st.number_input(
                 f"성적 입력",
                 value=float(st.session_state.practical_scores[event_name]) if st.session_state.practical_scores[event_name] is not None else 0.0,
