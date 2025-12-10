@@ -18,6 +18,8 @@ UNIVERSITY_STANDARDS = {
     "가천대학교": {
         "naesin_max": 300,
         "practical_max": 700,
+        "pass_excellent": 900,
+        "pass_good": 895,
         "male": {
             "배근력검사": {"standard": 221, "max_score": 175, "unit": "kg", "decreasing": False, "per_grade": 5, "score_per_grade": 8.75},
             "10m왕복달리기": {"standard": 8.00, "max_score": 175, "unit": "초", "decreasing": True, "per_grade": 0.1, "score_per_grade": 8.75},
@@ -34,6 +36,8 @@ UNIVERSITY_STANDARDS = {
     "상명대학교": {
         "naesin_max": 300,
         "practical_max": 700,
+        "pass_excellent": 940,
+        "pass_good": 935,
         "male": {
             "제자리멀리뛰기": {"standard": 305, "max_score": 245, "unit": "cm", "decreasing": False, "per_grade": 3, "score_per_grade": 17.5},
             "메디신볼던지기": {"standard": 12.7, "max_score": 210, "unit": "m", "decreasing": False, "per_grade": 0.2, "score_per_grade": 15},
@@ -242,12 +246,14 @@ def page_result():
     with m4:
         st.metric("합계", f"{total_score:.2f} / {max_total}")
     st.divider()
-    if total_score >= 900:
-        st.success("🎉 합격유력 (900점 이상)")
-    elif total_score >= 895:
-        st.info("👍 합격긍정 (895~899점)")
+    pass_excellent = UNIVERSITY_STANDARDS[university].get("pass_excellent", 900)
+    pass_good = UNIVERSITY_STANDARDS[university].get("pass_good", 895)
+    if total_score >= pass_excellent:
+        st.success(f"🎉 합격유력 ({pass_excellent}점 이상)")
+    elif total_score >= pass_good:
+        st.info(f"👍 합격긍정 ({pass_good}~{pass_excellent-1}점)")
     else:
-        st.error("🚫 불합격권 (894점 이하)")
+        st.error(f"🚫 불합격권 ({pass_good-1}점 이하)")
     with st.expander("세부 항목 보기 (실기 종목별 점수)"):
         if practical_rows:
             import pandas as pd
